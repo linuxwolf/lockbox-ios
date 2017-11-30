@@ -12,10 +12,16 @@ extension UIViewController : ErrorView {
     func displayError(_ error:Error) -> Void {
         let alertController = UIAlertController(title: error.localizedDescription, message: nil, preferredStyle: .alert)
 
-                    // todo: localization!
-                    let cancelAction = UIAlertAction(title: "OK", style: .cancel)
-                    alertController.addAction(cancelAction)
+        // todo: localization!
+        let cancelAction = UIAlertAction(title: "OK", style: .cancel)
+        alertController.addAction(cancelAction)
 
-                    self.present(alertController, animated: true, completion: nil)
-                }
+        self.present(alertController, animated: true, completion: nil)
+    }
+}
+
+extension UIViewController {
+    func preloadView() -> Void {
+        _ = self.view
+    }
 }
