@@ -96,6 +96,20 @@ class FxAViewSpec : QuickSpec {
                 expect(self.presenter.webViewNavigationAction).to(equal(action))
             }
         }
+
+        describe("required init") {
+            beforeEach {
+                let testBundle = Bundle.allBundles.filter { bundle in
+                    bundle.bundlePath.contains("xctest") && !bundle.bundlePath.contains("Frameworks")
+                }.first
+
+                self.subject = UIStoryboard.init(name: "FxAViewSpec", bundle: testBundle).instantiateViewController(withIdentifier: "fxa") as! FxAView
+            }
+
+            it("works") {
+                expect(self.subject.presenter).notTo(beNil())
+            }
+        }
     }
 }
 

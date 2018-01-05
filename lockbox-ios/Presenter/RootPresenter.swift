@@ -7,38 +7,109 @@ import RxSwift
 import RxCocoa
 
 protocol RootViewProtocol: class {
-    func showWelcomeView()
-    func showFxA()
+    func topViewIs<T>(_ class: T.Type) -> Bool
 
-    func showItemList()
-    func showItemDetail(itemId:String)
+    var loginStackDisplayed:Bool { get }
+    func startLoginStack()
+    func pushLoginView(view: LoginRouteAction)
+
+    var mainStackDisplayed:Bool { get }
+    func startMainStack()
+//    func pushMainView(view: MainRouteAction)
 }
 
-class RoutePresenter {
-    private weak var view: RootViewProtocol?
+typealias InfoKeyInitTriple = (profileInfo:ProfileInfo, scopedKey:String, initialized:Bool)
+typealias UidKeyTuple = (uid: String, scopedKey: String)
+typealias KeyLockTuple = (scopedKey: String, locked: Bool)
+
+class RootPresenter {
+    private weak var view: RootViewProtocol!
     private let disposeBag = DisposeBag()
 
-    init(view: RootViewProtocol) {
-        self.view = view
+    fileprivate let routeStore:RouteStore
+    fileprivate let userInfoStore:UserInfoStore
+    fileprivate let dataStore:DataStore
+    fileprivate let routeActionHandler:RouteActionHandler
+    fileprivate let dataStoreActionHandler:DataStoreActionHandler
 
-        RouteStore.shared.onRoute
+    init(view:RootViewProtocol,
+         routeStore:RouteStore = RouteStore.shared,
+         userInfoStore:UserInfoStore = UserInfoStore.shared,
+         dataStore:DataStore = DataStore.shared,
+         routeActionHandler:RouteActionHandler = RouteActionHandler.shared,
+         dataStoreActionHandler:DataStoreActionHandler = DataStoreActionHandler.shared
+    ) {
+        self.view = view
+        self.routeStore = routeStore
+        self.userInfoStore = userInfoStore
+        self.dataStore = dataStore
+        self.routeActionHandler = routeActionHandler
+        self.dataStoreActionHandler = dataStoreActionHandler
+
+        // request init & lock status update on app launch
+        self.dataStoreActionHandler.updateInitialized()
+        self.dataStoreActionHandler.updateLocked()
+
+        // initialize if not initialized
+        Observable.combineLatest(self.userInfoStore.profileInfo, self.userInfoStore.scopedKey, self.dataStore.onInitialized)
+                .filter { (triple:InfoKeyInitTriple) in
+                    return triple.profileInfo.uid.isEmpty == triple.scopedKey.isEmpty
+                }
+                .subscribe(onNext: { (triple:InfoKeyInitTriple) in
+                    // what happens when they are both empty and the datastore is initialized?
+                    if triple.profileInfo.uid.isEmpty && triple.scopedKey.isEmpty {
+                        self.routeActionHandler.invoke(LoginRouteAction.welcome)
+                    } else if !triple.initialized {
+                        // possible side case: getting an update to the scopedKey & uid on a logout / login
+                        // handle here or with DataStore interaction? need to overwrite initialized value...
+                        self.dataStoreActionHandler.initialize(scopedKey: triple.scopedKey, uid: triple.profileInfo.uid)
+                    }
+                })
+                .disposed(by: self.disposeBag)
+
+        // blindly unlock for now
+        Observable.combineLatest(self.userInfoStore.scopedKey, self.dataStore.onLocked)
+                .filter { (pair: KeyLockTuple) in
+                    return !pair.scopedKey.isEmpty && pair.locked
+                }
+                .subscribe(onNext: { (pair: KeyLockTuple) in
+                    if pair.locked {
+                        self.dataStoreActionHandler.unlock(scopedKey: pair.scopedKey)
+                    }
+                })
+                .disposed(by: self.disposeBag)
+    }
+
+    func onViewReady() {
+        // listen for explicit route actions
+        self.routeStore.onRoute
                 .filterByType(class: LoginRouteAction.self)
-                .bind(to: showLogin)
+                .asDriver(onErrorJustReturn: .welcome)
+                .drive(showLogin)
                 .disposed(by: disposeBag)
 
-        RouteStore.shared.onRoute
+        self.routeStore.onRoute
                 .filterByType(class: MainRouteAction.self)
-                .bind(to: showList)
+                .asDriver(onErrorJustReturn: .list)
+                .drive(showList)
                 .disposed(by: disposeBag)
     }
 
     fileprivate var showLogin:AnyObserver<LoginRouteAction> {
         return Binder(self) { target, loginAction in
+            if !self.view.loginStackDisplayed {
+                self.view.startLoginStack()
+            }
+
             switch loginAction {
-                case .login:
-                    self.view!.showWelcomeView()
+                case .welcome:
+                    if !self.view.topViewIs(WelcomeView.self) {
+                        self.view.pushLoginView(view: .welcome)
+                    }
                 case .fxa:
-                    self.view!.showFxA()
+                    if !self.view.topViewIs(FxAView.self) {
+                        self.view.pushLoginView(view: .fxa)
+                    }
             }
         }.asObserver()
     }
@@ -46,10 +117,8 @@ class RoutePresenter {
     fileprivate var showList:AnyObserver<MainRouteAction> {
         return Binder(self) { target, mainAction in
             switch mainAction {
-            case .list:
-                self.view!.showItemList()
-            case .detail(let itemId):
-                self.view!.showItemDetail(itemId: itemId)
+            case .list: break
+            case .detail(_): break
             }
         }.asObserver()
     }

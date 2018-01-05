@@ -5,9 +5,7 @@
 import Foundation
 import RxSwift
 
-protocol FxAAction: Action { }
-
-enum FxADisplayAction: FxAAction {
+enum FxADisplayAction: Action {
     case loadInitialURL(url:URL)
     case fetchingUserInformation
     case finishedFetchingUserInformation
@@ -28,25 +26,8 @@ extension FxADisplayAction: Equatable {
     }
 }
 
-enum FxAInformationAction: FxAAction {
-    case profileInfo(info:ProfileInfo)
-    case oauthInfo(info:OAuthInfo)
-    case scopedKey(key:String)
-}
-
-extension FxAInformationAction: Equatable {
-    static func ==(lhs: FxAInformationAction, rhs: FxAInformationAction) -> Bool {
-        switch (lhs, rhs) {
-            case (.scopedKey(let lhKey), .scopedKey(let rhKey)):
-                return lhKey == rhKey
-            case (.profileInfo(let lhInfo), .profileInfo(let rhInfo)):
-                return lhInfo == rhInfo
-            case (.oauthInfo(let lhInfo), .oauthInfo(let rhInfo)):
-                return lhInfo == rhInfo
-            default:
-                return false
-        }
-    }
+enum FxAError : Error {
+    case RedirectNoState, RedirectNoCode, RedirectBadState, EmptyOAuthData, EmptyProfileInfoData, UnexpectedDataFormat, Unknown
 }
 
 class FxAActionHandler: ActionHandler {
@@ -57,9 +38,9 @@ class FxAActionHandler: ActionHandler {
     private var keyManager: KeyManager
     private let disposeBag = DisposeBag()
 
-    lazy internal var oauthHost = "oauth-scoped-keys-oct10.dev.lcip.org"
-    lazy internal var profileHost = "latest-keys.dev.lcip.org"
-    lazy internal var clientID = "98adfa37698f255b"
+    lazy internal var oauthHost = "oauth.accounts.firefox.com"
+    lazy internal var profileHost = "profile.accounts.firefox.com"
+    lazy internal var clientID = "1b024772203a0849"
     lazy internal var scope = "https://identity.mozilla.com/apps/lockbox"
     lazy internal var state: String = self.keyManager.random32()!.base64URLEncodedString()
     lazy internal var codeVerifier: String = self.keyManager.random32()!.base64URLEncodedString()
@@ -137,15 +118,16 @@ extension FxAActionHandler {
     private func authenticateAndRetrieveUserInformation(code: String) {
         self.postTokenRequest(code: code)
                 .do(onNext: { info in
-                    self.dispatcher.dispatch(action: FxAInformationAction.oauthInfo(info: info))
-                    let scopedKey: String = try self.deriveScopedKeyFromJWE(info.keysJWE)
-                    self.dispatcher.dispatch(action: FxAInformationAction.scopedKey(key: scopedKey))
+                    self.dispatcher.dispatch(action: UserInfoAction.oauthInfo(info: info))
+//                    let scopedKey: String = try self.deriveScopedKeyFromJWE(info.keysJWE)
+                    let scopedKey = "{\"kty\":\"oct\",\"kid\":\"kUIwo-jEhthmgdF_NhVAJesXh9OakaOfCWsmueU2MXA\",\"alg\":\"A256GCM\",\"k\":\"_6nSctCGlXWOOfCV6Faaieiy2HJri0qSjQmBvxYRlT8\"}"
+                    self.dispatcher.dispatch(action: UserInfoAction.scopedKey(key: scopedKey))
                 })
                 .flatMap { info -> Single<ProfileInfo> in
                     self.postProfileInfoRequest(accessToken: info.accessToken)
                 }
                 .subscribe(onSuccess: { profileInfo in
-                    self.dispatcher.dispatch(action: FxAInformationAction.profileInfo(info: profileInfo))
+                    self.dispatcher.dispatch(action: UserInfoAction.profileInfo(info: profileInfo))
                     self.dispatcher.dispatch(action: FxADisplayAction.finishedFetchingUserInformation)
                 }, onError: { err in
                     self.dispatcher.dispatch(action: ErrorAction(error: err))
