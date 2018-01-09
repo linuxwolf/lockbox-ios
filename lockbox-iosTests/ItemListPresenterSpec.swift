@@ -17,8 +17,7 @@ class ItemListPresenterSpec : QuickSpec {
         var listCalled = false
 
         init() {
-            var throwaway = FakeWebView() as WebView
-            super.init(webView: &throwaway)
+            super.init()
         }
 
         override func list() -> Single<[Item]> {
