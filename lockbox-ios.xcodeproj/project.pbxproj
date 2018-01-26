@@ -97,7 +97,6 @@
 		7DF469C41F9F8F8000375C74 /* RxSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DF469C31F9F8F8000375C74 /* RxSwift.framework */; };
 		7DF469CA1F9F8FDA00375C74 /* RxTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DF469C91F9F8FDA00375C74 /* RxTest.framework */; };
 		7DF469CB1F9F8FE400375C74 /* RxTest.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DF469C91F9F8FDA00375C74 /* RxTest.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D83C9FBE1FAD3D5800D08AAE /* Telemetry.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83C9FBD1FAD3D5800D08AAE /* Telemetry.framework */; };
 		D83C9FBF1FAD3D6100D08AAE /* Telemetry.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83C9FBD1FAD3D5800D08AAE /* Telemetry.framework */; };
 		D83C9FC01FAD3D6100D08AAE /* Telemetry.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83C9FBD1FAD3D5800D08AAE /* Telemetry.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8FD41491FABD7BB0080D183 /* TelemetryIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD41481FABD7BB0080D183 /* TelemetryIntegration.swift */; };
@@ -260,7 +259,6 @@
 				7DF469C41F9F8F8000375C74 /* RxSwift.framework in Frameworks */,
 				7D302BEA1FD7283600D2FD4B /* RxCocoa.framework in Frameworks */,
 				D83C9FBF1FAD3D6100D08AAE /* Telemetry.framework in Frameworks */,
-				D83C9FBE1FAD3D5800D08AAE /* Telemetry.framework in Frameworks */,
 				7D3920271FB131FB00709575 /* libcrypto.a in Frameworks */,
 				7D3920281FB131FB00709575 /* libssl.a in Frameworks */,
 				7D3920291FB131FB00709575 /* libjansson.a in Frameworks */,
@@ -537,7 +535,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0900;
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = "Sasha Heinen";
 				TargetAttributes = {
 					7D1B1AC31F99028D00C1F5FF = {
@@ -706,7 +704,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "mozilla.lockbox-iosTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "lockbox-ios/Common/Resources/lockbox-ios-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/lockbox-ios.app/lockbox-ios";
@@ -733,6 +733,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "mozilla.lockbox-iosTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "lockbox-ios/Common/Resources/lockbox-ios-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/lockbox-ios.app/lockbox-ios";
@@ -875,6 +877,7 @@
 				SWIFT_INCLUDE_PATHS = "${PROJECT_DIR}/lockbox-ios/binaries/** ${PROJECT_DIR}/lockbox-ios/CommonCrypto/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "lockbox-ios/Common/Resources/lockbox-ios-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -908,6 +911,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_INCLUDE_PATHS = "${PROJECT_DIR}/lockbox-ios/binaries/** ${PROJECT_DIR}/lockbox-ios/CommonCrypto/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "lockbox-ios/Common/Resources/lockbox-ios-Bridging-Header.h";
+				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
